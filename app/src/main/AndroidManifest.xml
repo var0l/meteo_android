@@ -39,6 +39,8 @@
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="org.kawk.meteopolska.ACTION_REFRESH" />
                 <action android:name="org.kawk.meteopolska.ACTION_CITY_CHANGED" />
+                <action android:name="org.kawk.meteopolska.ACTION_PREV_DAY" />
+                <action android:name="org.kawk.meteopolska.ACTION_NEXT_DAY" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"

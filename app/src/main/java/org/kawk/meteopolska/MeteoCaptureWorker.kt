@@ -43,12 +43,17 @@ class MeteoCaptureWorker(
                 val byCity = widgetCities.groupBy({ it.second }, { it.first })
                 for ((city, widgetIds) in byCity) {
                     try {
-                        Log.d("MeteoCaptureWorker", "Fetching ${city.name} col=${city.col} row=${city.row}")
-                        val bitmap = MeteogramFetcher.fetch(city.col, city.row)
-                        Log.d("MeteoCaptureWorker", "Fetched bitmap: ${bitmap.width}x${bitmap.height}")
+                        Log.d("MeteoCaptureWorker", "Fetching ${city.name} lat=${city.lat} lon=${city.lon}")
+                        val raw = MeteogramFetcher.downloadRaw(city)
+                        val forecast = MeteogramFetcher.parse(raw)
+                        val days = MeteogramRenderer.dayCount(forecast)
                         for (wid in widgetIds) {
+                            val day = ImageStore.getDay(ctx, wid).coerceIn(0, days - 1)
+                            ImageStore.setDay(ctx, wid, day)
+                            ImageStore.saveForecast(ctx, wid, raw)
+                            val bitmap = MeteogramRenderer.render(city, forecast, day)
                             ImageStore.save(ctx, wid, bitmap)
-                            Log.d("MeteoCaptureWorker", "Saved for widget $wid")
+                            Log.d("MeteoCaptureWorker", "Saved ${bitmap.width}x${bitmap.height} day $day for widget $wid")
                         }
                     } catch (t: Throwable) {
                         Log.e("MeteoCaptureWorker", "Fetch failed for ${city.name}", t)

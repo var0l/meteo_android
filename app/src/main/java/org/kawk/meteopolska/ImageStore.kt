@@ -14,10 +14,11 @@ object ImageStore {
     private fun prefs(context: Context) =
         context.getSharedPreferences(Constants.PREFS, Context.MODE_PRIVATE)
 
-    fun save(context: Context, appWidgetId: Int, bitmap: Bitmap) {
+    fun save(context: Context, appWidgetId: Int, bitmap: Bitmap, touch: Boolean = true) {
         FileOutputStream(file(context, appWidgetId)).use { out ->
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
         }
+        if (!touch) return
         prefs(context).edit()
             .putLong(Constants.keyUpdatedAt(appWidgetId), System.currentTimeMillis())
             .apply()
@@ -64,9 +65,27 @@ object ImageStore {
         return name?.let { Cities.byName(it) }
     }
 
+    private fun forecastFile(context: Context, appWidgetId: Int) =
+        File(context.filesDir, Constants.forecastFile(appWidgetId))
+
+    fun saveForecast(context: Context, appWidgetId: Int, raw: String) =
+        forecastFile(context, appWidgetId).writeText(raw)
+
+    fun loadForecast(context: Context, appWidgetId: Int): String? =
+        forecastFile(context, appWidgetId).takeIf { it.exists() }?.readText()
+
+    fun getDay(context: Context, appWidgetId: Int): Int =
+        prefs(context).getInt(Constants.keyDay(appWidgetId), 0)
+
+    fun setDay(context: Context, appWidgetId: Int, day: Int) {
+        prefs(context).edit().putInt(Constants.keyDay(appWidgetId), day).apply()
+    }
+
     fun deleteWidget(context: Context, appWidgetId: Int) {
         file(context, appWidgetId).delete()
+        forecastFile(context, appWidgetId).delete()
         prefs(context).edit()
+            .remove(Constants.keyDay(appWidgetId))
             .remove(Constants.keyUpdatedAt(appWidgetId))
             .remove(Constants.keyRefreshing(appWidgetId))
             .remove(Constants.keyCity(appWidgetId))

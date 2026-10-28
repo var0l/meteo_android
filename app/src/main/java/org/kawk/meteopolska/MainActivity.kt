@@ -49,8 +49,26 @@ class MainActivity : Activity() {
             val city = Cities.byName(cityName) ?: Cities.DEFAULT
             ImageStore.saveCity(this, previewWidgetId, city)
             Scheduler.refreshNow(this)
-            Toast.makeText(this, R.string.refreshing, Toast.LENGTH_SHORT).show()
+            refreshPreview(city, image, status)
         }
+
+        if (!ImageStore.hasImage(this, previewWidgetId)) {
+            refreshPreview(Cities.DEFAULT, image, status)
+        }
+    }
+
+    private fun refreshPreview(city: City, image: ImageView, status: TextView) {
+        Toast.makeText(this, R.string.refreshing, Toast.LENGTH_SHORT).show()
+        Thread {
+            val ok = runCatching {
+                ImageStore.save(this, previewWidgetId, MeteogramFetcher.fetch(city))
+            }.isSuccess
+            runOnUiThread {
+                if (isDestroyed) return@runOnUiThread
+                render(image, status)
+                if (!ok) Toast.makeText(this, R.string.fetch_failed, Toast.LENGTH_LONG).show()
+            }
+        }.start()
     }
 
     override fun onResume() {
@@ -65,7 +83,11 @@ class MainActivity : Activity() {
     private fun render(image: ImageView, status: TextView) {
         ImageStore.loadOrSample(this, previewWidgetId)?.let { image.setImageBitmap(it) }
         status.text = if (ImageStore.hasImage(this, previewWidgetId)) {
-            getString(R.string.updated_at, "")
+            getString(
+                R.string.updated_at,
+                java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT)
+                    .format(java.util.Date(ImageStore.updatedAt(this, previewWidgetId))),
+            )
         } else {
             getString(R.string.sample_image)
         }

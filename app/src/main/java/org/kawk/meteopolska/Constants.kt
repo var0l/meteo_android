@@ -3,9 +3,8 @@ package org.kawk.meteopolska
 object Constants {
     const val DEMO_STATIC = false
 
-    const val MGRAM_BASE_URL =
-        "https://old.meteo.pl/um/metco/mgram_pict.php?ntype=0u&row=%d&col=%d&lang=pl"
-    const val LEGEND_URL = "https://old.meteo.pl/um/metco/leg_um_pl_cbase_256.png"
+    const val MGRAM_API_BASE = "https://devmgramapi.meteo.pl"
+    const val MGRAM_MODEL = "um4_60"
 
     const val REFRESH_INTERVAL_MIN = 30L
 
@@ -14,6 +13,8 @@ object Constants {
 
     const val ACTION_REFRESH = "org.kawk.meteopolska.ACTION_REFRESH"
     const val ACTION_CITY_CHANGED = "org.kawk.meteopolska.ACTION_CITY_CHANGED"
+    const val ACTION_PREV_DAY = "org.kawk.meteopolska.ACTION_PREV_DAY"
+    const val ACTION_NEXT_DAY = "org.kawk.meteopolska.ACTION_NEXT_DAY"
 
     const val PREFS = "meteo_prefs"
     const val EXTRA_APPWIDGET_ID = "appwidget_id"
@@ -22,4 +23,6 @@ object Constants {
     fun keyUpdatedAt(appWidgetId: Int) = "updated_at_$appWidgetId"
     fun keyRefreshing(appWidgetId: Int) = "refreshing_$appWidgetId"
     fun keyCity(appWidgetId: Int) = "city_$appWidgetId"
+    fun forecastFile(appWidgetId: Int) = "forecast_$appWidgetId.json"
+    fun keyDay(appWidgetId: Int) = "day_$appWidgetId"
 }
