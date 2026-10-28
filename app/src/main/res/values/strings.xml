@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Meteo Polska</string>
+    <string name="widget_label">Meteo Polska</string>
+    <string name="refresh">Refresh</string>
+    <string name="refreshing">Refreshing…</string>
+    <string name="loading">Loading meteogram…</string>
+    <string name="never_updated">Not updated yet</string>
+    <string name="updated_at">Updated %1$s</string>
+    <string name="sample_image">Sample image (demo)</string>
+    <string name="add_widget">Add widget to home screen</string>
+    <string name="pin_unsupported">Launcher does not support pinning widgets</string>
+    <string name="select_city">Select city</string>
+    <string name="confirm">OK</string>
+    <string name="cancel">Cancel</string>
+</resources>
