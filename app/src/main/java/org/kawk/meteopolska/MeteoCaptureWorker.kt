@@ -43,8 +43,8 @@ class MeteoCaptureWorker(
                 val byCity = widgetCities.groupBy({ it.second }, { it.first })
                 for ((city, widgetIds) in byCity) {
                     try {
-                        Log.d("MeteoCaptureWorker", "Fetching ${city.name} col=${city.col} row=${city.row}")
-                        val bitmap = MeteogramFetcher.fetch(city.col, city.row)
+                        Log.d("MeteoCaptureWorker", "Fetching ${city.name} lat=${city.lat} lon=${city.lon}")
+                        val bitmap = MeteogramFetcher.fetch(city)
                         Log.d("MeteoCaptureWorker", "Fetched bitmap: ${bitmap.width}x${bitmap.height}")
                         for (wid in widgetIds) {
                             ImageStore.save(ctx, wid, bitmap)

@@ -3,9 +3,8 @@ package org.kawk.meteopolska
 object Constants {
     const val DEMO_STATIC = false
 
-    const val MGRAM_BASE_URL =
-        "https://old.meteo.pl/um/metco/mgram_pict.php?ntype=0u&row=%d&col=%d&lang=pl"
-    const val LEGEND_URL = "https://old.meteo.pl/um/metco/leg_um_pl_cbase_256.png"
+    const val MGRAM_API_BASE = "https://devmgramapi.meteo.pl"
+    const val MGRAM_MODEL = "um4_60"
 
     const val REFRESH_INTERVAL_MIN = 30L
 

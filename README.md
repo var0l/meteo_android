@@ -6,8 +6,7 @@ Android home-screen widget for Polish UM meteograms. It was derived from `MeteoT
 
 - Each widget instance can select its own city; Toruń is the default.
 - `MeteoCaptureWorker` refreshes every 30 minutes and on manual refresh.
-- `MeteogramFetcher` downloads a meteogram PNG and shared legend PNG from `old.meteo.pl`.
-- The fetched meteogram is banner-cropped and white-trimmed. The legend is split into seven sections and arranged below the meteogram in two columns.
+- `MeteogramFetcher` downloads hourly UM 4 km point-forecast data (60 h) from the ICM meteogram API and draws a meteogram bitmap: temperature/dew point, precipitation/humidity, sea-level pressure, wind/gusts/direction, and cloud layers, in local time.
 - `ImageStore` caches the composed bitmap, selected city, update timestamp, and refreshing state per app-widget ID.
 - `MeteoWidgetProvider` renders the city, image, status, refresh button, and city-configuration action.
 - `MainActivity` provides a sample preview, city selector, manual refresh, and `requestPinAppWidget` flow.
@@ -15,33 +14,32 @@ Android home-screen widget for Polish UM meteograms. It was derived from `MeteoT
 
 ## Source endpoints
 
-The current implementation expects static images:
+The legacy `old.meteo.pl/um/metco/mgram_pict.php` image endpoint was retired (since 2026-10 it only returns a 540×660 "Poznaj nowe Meteo ICM" promo PNG). The app now uses the same JSON API as the official Meteo ICM app (`app.meteo.pl`):
 
 ```text
-https://old.meteo.pl/um/metco/mgram_pict.php?ntype=0u&row={row}&col={col}&lang=pl
-https://old.meteo.pl/um/metco/leg_um_pl_cbase_256.png
+GET  https://devmgramapi.meteo.pl/meteorograms/available
+     -> {"um4_60": [run epoch seconds...], "um4_120": [...], "gfs": [...]}
+POST https://devmgramapi.meteo.pl/meteorograms/um4_60
+     {"point": {"lat": "53.0138", "lon": "18.5984"}, "date": <latest run>}
+     -> {"data": {"airtmp_point": {"first_timestamp", "interval", "data": [...]}, ...}}
 ```
 
-City grid coordinates live in `app/src/main/java/org/kawk/meteopolska/City.kt`.
+Values below -1e6 (e.g. `-327276480`) mean "no value" (typically cloud base with no cloud). The host name contains `dev` but is what the production web app calls; if it disappears, check `https://app.meteo.pl/main.dart.js` for the current `/meteorograms/` base URL.
 
-## Known issue observed on 2026-10-28
-
-The meteogram endpoint returned a 540×660 “Poznaj nowe Meteo ICM” promotional PNG instead of the expected UM meteogram for Toruń (`col=209`, `row=383`). The app still renders correctly, but the live widget displays the promo image. The bundled `app/src/main/res/raw/sample_meteogram.png` shows the intended composed layout.
-
-Before changing rendering code, verify whether `old.meteo.pl` temporarily replaced the image, started serving a different response to this user agent/IP, or moved the real meteogram endpoint.
+City coordinates (lat/lon) live in `app/src/main/java/org/kawk/meteopolska/City.kt`.
 
 ## Project layout
 
 ```text
 app/src/main/java/org/kawk/meteopolska/
   BootReceiver.kt          Reschedules work after reboot
-  City.kt                  18-city model and meteogram grid coordinates
+  City.kt                  18-city model with lat/lon
   CityConfigActivity.kt    Per-widget city selection
   Constants.kt             URLs, intervals, preference keys, intent actions
   ImageStore.kt            Per-widget bitmap/state persistence
   MainActivity.kt          Preview, city selector, refresh, widget pinning
   MeteoCaptureWorker.kt    WorkManager fetch/refresh job
-  MeteogramFetcher.kt      Download, crop, trim, split, and compose images
+  MeteogramFetcher.kt      ICM API download and meteogram rendering
   MeteoWidgetProvider.kt   RemoteViews rendering and widget actions
   Scheduler.kt             Periodic and one-shot WorkManager scheduling
 app/src/main/res/raw/sample_meteogram.png
@@ -98,10 +96,8 @@ Use this as a compact starting prompt for the next session:
 ```text
 Work on var0l/meteo_android, a Kotlin Android home-screen widget.
 The app supports 18 Polish cities and caches a composed meteogram per
-app-widget ID. Read README.md first. Verify whether the old.meteo.pl
-meteogram endpoint still returns a Meteo ICM promo PNG; if so, find the
-replacement/static endpoint or a robust parser/fallback before changing
-layout logic. Preserve per-widget city selection and manual/30-minute
+app-widget ID and renders it from the ICM meteogram JSON API
+(devmgramapi.meteo.pl, um4_60). Read README.md first. Preserve per-widget city selection and manual/30-minute
 WorkManager refresh. Build with ./gradlew assembleDebug and validate on an
 Android emulator sized like a Pixel 10 Pro when changing widget UI.
 ```
