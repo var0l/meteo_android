@@ -3,6 +3,8 @@
     <string name="app_name">Meteo Polska</string>
     <string name="widget_label">Meteo Polska</string>
     <string name="refresh">Refresh</string>
+    <string name="prev_day">Previous day</string>
+    <string name="next_day">Next day</string>
     <string name="refreshing">Refreshing…</string>
     <string name="loading">Loading meteogram…</string>
     <string name="never_updated">Not updated yet</string>

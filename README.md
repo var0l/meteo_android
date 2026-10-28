@@ -6,9 +6,11 @@ Android home-screen widget for Polish UM meteograms. It was derived from `MeteoT
 
 - Each widget instance can select its own city; Toruń is the default.
 - `MeteoCaptureWorker` refreshes every 30 minutes and on manual refresh.
-- `MeteogramFetcher` downloads hourly UM 4 km point-forecast data (60 h) from the ICM meteogram API and draws a meteogram bitmap: temperature/dew point, precipitation/humidity, sea-level pressure, wind/gusts/direction, and cloud layers, in local time.
-- `ImageStore` caches the composed bitmap, selected city, update timestamp, and refreshing state per app-widget ID.
-- `MeteoWidgetProvider` renders the city, image, status, refresh button, and city-configuration action.
+- `MeteogramFetcher` downloads hourly UM 4 km point-forecast data (60 h) from the ICM meteogram API.
+- `MeteogramRenderer` draws it in the style of the classic ICM meteogram (540 px wide, scaled up by the widget like the old image): header (sunrise/sunset, coordinates, grid row/col, model run), a 60 h mini meteogram with a frame on the selected day, a 3-day table (max/min temperature, rain total, rain probability), a 24 h temperature + precipitation/humidity chart for the selected day (CET/CEST on top, UTC below), and an annotated legend.
+- ◀ ▶ in the widget switch the day in place (no app launch, no network) by re-rendering from the cached forecast.
+- `ImageStore` caches the rendered bitmap, raw forecast JSON, selected day, selected city, update timestamp, and refreshing state per app-widget ID.
+- `MeteoWidgetProvider` renders the city, image, status, ◀ ▶ / refresh buttons, and city-configuration action.
 - `MainActivity` provides a sample preview, city selector, manual refresh, and `requestPinAppWidget` flow.
 - `BootReceiver` restores periodic refresh after reboot.
 
@@ -39,7 +41,8 @@ app/src/main/java/org/kawk/meteopolska/
   ImageStore.kt            Per-widget bitmap/state persistence
   MainActivity.kt          Preview, city selector, refresh, widget pinning
   MeteoCaptureWorker.kt    WorkManager fetch/refresh job
-  MeteogramFetcher.kt      ICM API download and meteogram rendering
+  MeteogramFetcher.kt      ICM API download and parsing
+  MeteogramRenderer.kt     Classic-ICM-style meteogram bitmap (overview, day table, 24 h chart, legend)
   MeteoWidgetProvider.kt   RemoteViews rendering and widget actions
   Scheduler.kt             Periodic and one-shot WorkManager scheduling
 app/src/main/res/raw/sample_meteogram.png
@@ -88,6 +91,19 @@ adb shell monkey -p org.kawk.meteopolska \
   -c android.intent.category.LAUNCHER 1
 adb exec-out screencap -p > screenshot.png
 ```
+
+## Backlog
+
+Found while testing the redesigned widget on a phone:
+
+1. **Fill the widget:** render at the widget's actual size (`AppWidgetManager.getAppWidgetOptions`) so the 24 h panels grow instead of leaving white bands above/below the fixed-aspect image; re-render on resize.
+2. **Overlapping labels in the 60 h strip:** right-axis labels of the temperature and rain panels collide ("-5"/"100", "0"/"-5"); drop the clashing ones.
+3. **Larger text:** hours, axis numbers and header are small at arm's length; enlarge ~15–20% (fits once 1 is done).
+4. **Larger ◀ ▶ glyphs:** they look small next to ⟳.
+5. **Optional collapsible legend:** tap the legend to fold it into one line (full legend stays the default).
+6. **Optional "now" marker:** thin red vertical line at the current hour on today's chart and the strip.
+
+Also unverified with live data: snow colouring assumes `pcpttl_type_max >= 2` means snow, and storm markers use `storm_max > 0`.
 
 ## Development handoff prompt
 

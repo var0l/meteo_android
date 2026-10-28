@@ -44,11 +44,16 @@ class MeteoCaptureWorker(
                 for ((city, widgetIds) in byCity) {
                     try {
                         Log.d("MeteoCaptureWorker", "Fetching ${city.name} lat=${city.lat} lon=${city.lon}")
-                        val bitmap = MeteogramFetcher.fetch(city)
-                        Log.d("MeteoCaptureWorker", "Fetched bitmap: ${bitmap.width}x${bitmap.height}")
+                        val raw = MeteogramFetcher.downloadRaw(city)
+                        val forecast = MeteogramFetcher.parse(raw)
+                        val days = MeteogramRenderer.dayCount(forecast)
                         for (wid in widgetIds) {
+                            val day = ImageStore.getDay(ctx, wid).coerceIn(0, days - 1)
+                            ImageStore.setDay(ctx, wid, day)
+                            ImageStore.saveForecast(ctx, wid, raw)
+                            val bitmap = MeteogramRenderer.render(city, forecast, day)
                             ImageStore.save(ctx, wid, bitmap)
-                            Log.d("MeteoCaptureWorker", "Saved for widget $wid")
+                            Log.d("MeteoCaptureWorker", "Saved ${bitmap.width}x${bitmap.height} day $day for widget $wid")
                         }
                     } catch (t: Throwable) {
                         Log.e("MeteoCaptureWorker", "Fetch failed for ${city.name}", t)

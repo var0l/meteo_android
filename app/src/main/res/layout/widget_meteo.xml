@@ -26,6 +26,30 @@
             android:paddingEnd="4dp"
             tools:ignore="RtlSymmetry" />
 
+        <TextView
+            android:id="@+id/meteo_prev"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="6dp"
+            android:background="@drawable/refresh_button_bg"
+            android:gravity="center"
+            android:text="◀"
+            android:textColor="#1A3A8A"
+            android:textSize="14sp"
+            android:contentDescription="@string/prev_day" />
+
+        <TextView
+            android:id="@+id/meteo_next"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="6dp"
+            android:background="@drawable/refresh_button_bg"
+            android:gravity="center"
+            android:text="▶"
+            android:textColor="#1A3A8A"
+            android:textSize="14sp"
+            android:contentDescription="@string/next_day" />
+
         <ImageButton
             android:id="@+id/meteo_refresh"
             android:layout_width="32dp"

@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.widget.RemoteViews
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -41,6 +42,21 @@ class MeteoWidgetProvider : AppWidgetProvider() {
         super.onReceive(context, intent)
         when (intent.action) {
             Constants.ACTION_REFRESH -> Scheduler.refreshNow(context)
+            Constants.ACTION_PREV_DAY, Constants.ACTION_NEXT_DAY -> {
+                val id = intent.getIntExtra(Constants.EXTRA_APPWIDGET_ID, -1)
+                if (id < 0) return
+                val delta = if (intent.action == Constants.ACTION_NEXT_DAY) 1 else -1
+                val pending = goAsync()
+                Thread {
+                    try {
+                        shiftDay(context, id, delta)
+                    } catch (t: Throwable) {
+                        Log.e("MeteoWidgetProvider", "Day change failed", t)
+                    } finally {
+                        pending.finish()
+                    }
+                }.start()
+            }
             Constants.ACTION_CITY_CHANGED -> {
                 val id = intent.getIntExtra(Constants.EXTRA_APPWIDGET_ID, -1)
                 if (id >= 0) {
@@ -53,6 +69,28 @@ class MeteoWidgetProvider : AppWidgetProvider() {
     }
 
     companion object {
+
+        private fun shiftDay(context: Context, appWidgetId: Int, delta: Int) {
+            val raw = ImageStore.loadForecast(context, appWidgetId) ?: return
+            val forecast = MeteogramFetcher.parse(raw)
+            val city = ImageStore.getCity(context, appWidgetId) ?: Cities.DEFAULT
+            val days = MeteogramRenderer.dayCount(forecast)
+            val day = (ImageStore.getDay(context, appWidgetId) + delta).coerceIn(0, days - 1)
+            ImageStore.setDay(context, appWidgetId, day)
+            ImageStore.save(context, appWidgetId, MeteogramRenderer.render(city, forecast, day), touch = false)
+            updateWidget(context, AppWidgetManager.getInstance(context), appWidgetId)
+        }
+
+        private fun dayIntent(context: Context, appWidgetId: Int, action: String, code: Int): PendingIntent {
+            val intent = Intent(context, MeteoWidgetProvider::class.java).apply {
+                this.action = action
+                putExtra(Constants.EXTRA_APPWIDGET_ID, appWidgetId)
+            }
+            return PendingIntent.getBroadcast(
+                context, appWidgetId * 10 + code, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            )
+        }
 
         fun refreshAll(context: Context) {
             val manager = AppWidgetManager.getInstance(context)
@@ -101,6 +139,8 @@ class MeteoWidgetProvider : AppWidgetProvider() {
             )
             views.setOnClickPendingIntent(R.id.meteo_refresh, refreshPending)
             views.setOnClickPendingIntent(R.id.meteo_image, refreshPending)
+            views.setOnClickPendingIntent(R.id.meteo_prev, dayIntent(context, appWidgetId, Constants.ACTION_PREV_DAY, 1))
+            views.setOnClickPendingIntent(R.id.meteo_next, dayIntent(context, appWidgetId, Constants.ACTION_NEXT_DAY, 2))
 
             val configIntent = Intent(context, CityConfigActivity::class.java).apply {
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)

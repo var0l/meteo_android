@@ -13,6 +13,8 @@ object Constants {
 
     const val ACTION_REFRESH = "org.kawk.meteopolska.ACTION_REFRESH"
     const val ACTION_CITY_CHANGED = "org.kawk.meteopolska.ACTION_CITY_CHANGED"
+    const val ACTION_PREV_DAY = "org.kawk.meteopolska.ACTION_PREV_DAY"
+    const val ACTION_NEXT_DAY = "org.kawk.meteopolska.ACTION_NEXT_DAY"
 
     const val PREFS = "meteo_prefs"
     const val EXTRA_APPWIDGET_ID = "appwidget_id"
@@ -21,4 +23,6 @@ object Constants {
     fun keyUpdatedAt(appWidgetId: Int) = "updated_at_$appWidgetId"
     fun keyRefreshing(appWidgetId: Int) = "refreshing_$appWidgetId"
     fun keyCity(appWidgetId: Int) = "city_$appWidgetId"
+    fun forecastFile(appWidgetId: Int) = "forecast_$appWidgetId.json"
+    fun keyDay(appWidgetId: Int) = "day_$appWidgetId"
 }
